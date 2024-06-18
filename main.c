@@ -10,13 +10,12 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <mach/mach.h>
+#include <mach/machine.h>
 #include <mach-o/fat.h>
 #include <mach-o/loader.h>
 
-// Define the subtypes (credits to OldABI by evelyneee)
-//	https://github.com/evelyneee/OldABI/blob/main/OldABI.swift
-#define CPU_SUBTYPE_ARM64E_OLD_ABI 0x2000000
-#define CPU_SUBTYPE_ARM64E_NEW_ABI 0x2000080
+// CPU_SUBTYPE_ARM64E - subtype used when compiling with the old arm64e ABI
+// CPU_SUBTYPE_ARM64E | CPU_SUBTYPE_PTRAUTH_ABI - subtype used when compiling with the new arm64e ABI
 
 int main(int argc, char *argv[], char *envp[]) {
 	// Check args
@@ -86,10 +85,10 @@ int main(int argc, char *argv[], char *envp[]) {
 			const struct mach_header_64 *sh = (const struct mach_header_64 *)(map + OSSwapBigToHostInt32(arch->offset));
 
 			// Print the ABI type if the corresponding subtype is found
-			if (OSSwapBigToHostInt32(sh->cpusubtype) == CPU_SUBTYPE_ARM64E_OLD_ABI) {
+			if (sh->cpusubtype == CPU_SUBTYPE_ARM64E) {
 				fprintf(stdout, "Found old ABI.\n");
 				goto cleanup;
-			} else if (OSSwapBigToHostInt32(sh->cpusubtype) == CPU_SUBTYPE_ARM64E_NEW_ABI) {
+			} else if (sh->cpusubtype == (CPU_SUBTYPE_ARM64E | CPU_SUBTYPE_PTRAUTH_ABI)) {
 				fprintf(stdout, "Found new ABI.\n");
 				goto cleanup;
 			}
@@ -107,9 +106,9 @@ int main(int argc, char *argv[], char *envp[]) {
 
 		// Print the ABI type if the corresponding subtype is found
 		// If there is no arm64e slice found, then inform user
-		if (OSSwapBigToHostInt32(mh->cpusubtype) == CPU_SUBTYPE_ARM64E_OLD_ABI) {
+		if (mh->cpusubtype == CPU_SUBTYPE_ARM64E) {
 			fprintf(stdout, "Found old ABI.\n");
-		} else if (OSSwapBigToHostInt32(mh->cpusubtype) == CPU_SUBTYPE_ARM64E_NEW_ABI) {
+		} else if (mh->cpusubtype == (CPU_SUBTYPE_ARM64E | CPU_SUBTYPE_PTRAUTH_ABI)) {
 			fprintf(stdout, "Found new ABI.\n");
 		} else {
 			fprintf(stdout, "No arm64e slice found!\n");
