@@ -31,12 +31,6 @@ int main(int argc, char *argv[], char *envp[]) {
 		verbose = true;
 	}
 
-	// If the file can't be accessed, throw error
-	if (access(path_to_exec, R_OK) == -1) {
-		fprintf(stderr, "Failed to access executable at path \"%s\"\n", path_to_exec);
-		return EXIT_FAILURE;
-	}
-
 	// Getting the file descriptor for the file in readonly mode
 	int fd = open(path_to_exec, O_RDONLY);
 
