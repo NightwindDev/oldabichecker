@@ -14,9 +14,6 @@
 #include <mach-o/fat.h>
 #include <mach-o/loader.h>
 
-// CPU_SUBTYPE_ARM64E - subtype used when compiling with the old arm64e ABI
-// CPU_SUBTYPE_ARM64E | CPU_SUBTYPE_PTRAUTH_ABI - subtype used when compiling with the new arm64e ABI
-
 int main(int argc, char *argv[], char *envp[]) {
 	// Check args
 	if (argc != 2 && argc != 3) {
@@ -84,13 +81,15 @@ int main(int argc, char *argv[], char *envp[]) {
 			// Interpret each arch as a slice header
 			const struct mach_header_64 *sh = (const struct mach_header_64 *)(map + OSSwapBigToHostInt32(arch->offset));
 
-			// Print the ABI type if the corresponding subtype is found
-			if (sh->cpusubtype == CPU_SUBTYPE_ARM64E) {
-				fprintf(stdout, "Found old ABI.\n");
-				goto cleanup;
-			} else if (sh->cpusubtype == (CPU_SUBTYPE_ARM64E | CPU_SUBTYPE_PTRAUTH_ABI)) {
-				fprintf(stdout, "Found new ABI.\n");
-				goto cleanup;
+			// Get the cpu subtype without any feature flags, if arm64e, check for the new ptrauth ABI
+			if ((sh->cpusubtype & ~CPU_SUBTYPE_MASK) == CPU_SUBTYPE_ARM64E) {
+				if (sh->cpusubtype & CPU_SUBTYPE_PTRAUTH_ABI) {
+					fprintf(stdout, "Found new ABI.\n");
+					goto cleanup;
+				} else {
+					fprintf(stdout, "Found old ABI.\n");
+					goto cleanup;
+				}
 			}
 
 			// Move on to the next arch
@@ -104,12 +103,13 @@ int main(int argc, char *argv[], char *envp[]) {
 
 		if (verbose) fprintf(stdout, "Thinned file, running directly\n");
 
-		// Print the ABI type if the corresponding subtype is found
-		// If there is no arm64e slice found, then inform user
-		if (mh->cpusubtype == CPU_SUBTYPE_ARM64E) {
-			fprintf(stdout, "Found old ABI.\n");
-		} else if (mh->cpusubtype == (CPU_SUBTYPE_ARM64E | CPU_SUBTYPE_PTRAUTH_ABI)) {
-			fprintf(stdout, "Found new ABI.\n");
+		// Get the cpu subtype without any feature flags, if arm64e, check for the new ptrauth ABI
+		if ((mh->cpusubtype & ~CPU_SUBTYPE_MASK) == CPU_SUBTYPE_ARM64E) {
+			if (mh->cpusubtype & CPU_SUBTYPE_PTRAUTH_ABI) {
+				fprintf(stdout, "Found new ABI.\n");
+			} else {
+				fprintf(stdout, "Found old ABI.\n");
+			}
 		} else {
 			fprintf(stdout, "No arm64e slice found!\n");
 		}
