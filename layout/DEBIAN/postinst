@@ -1,0 +1,5 @@
+#!/bin/sh
+if [ -d /var/mobile/Library/Filza/scripts ]; then
+	echo "Adding oldabichecker.script to Filza's scripts directory."
+	echo "oldabichecker \"\$1\"" > /var/mobile/Library/Filza/scripts/oldabichecker.script
+fi

@@ -1,0 +1,9 @@
+Package: com.nightwind.oldabichecker
+Name: oldabichecker
+Version: 0.0.1
+Architecture: iphoneos-arm
+Description: A tool to check whether an executable is compiled with the old or new arm64e ABI. Includes a Filza script for ease-of-use.
+Maintainer: Nightwind
+Author: Nightwind
+Section: System
+Tag: role::hacker
